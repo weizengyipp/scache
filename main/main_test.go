@@ -8,7 +8,7 @@ import (
 )
 
 var host = "127.0.0.1"
-var port = "8080"
+var port = "8003"
 
 func TestScacheGet(t *testing.T) {
 	cases := []struct {
