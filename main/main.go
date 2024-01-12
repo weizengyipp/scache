@@ -39,7 +39,7 @@ func startCacheServer(addr string, addrs []string, group *scache.Group) {
 }
 
 func startAPIServer(apiAddr string, group *scache.Group) {
-	http.Handle(apiAddr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.Handle("/api", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Query().Get("key")
 		view, err := group.Get(key)
 		if err != nil {

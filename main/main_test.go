@@ -9,6 +9,7 @@ import (
 
 var host = "127.0.0.1"
 var port = "8003"
+var apiport = "9999"
 
 func TestScacheGet(t *testing.T) {
 	cases := []struct {
@@ -124,5 +125,35 @@ func TestScacheGetWithUnknownKey(t *testing.T) {
 	}
 	if !strings.Contains(string(body), "unkey not exist") {
 		t.Fatal("unepxected body:", string(body), "exp:", "unkey not exist")
+	}
+}
+
+func TestScacheGetAPI(t *testing.T) {
+	cases := []struct {
+		key, exp string
+		expCode  int
+	}{
+		{"Tom", "630", 200},
+		{"Jack", "589", 200},
+		{"Sam", "567", 200},
+	}
+
+	for _, c := range cases {
+		url := "http://" + host + ":" + apiport + "/api?key=" + c.key
+		t.Log("request GET: " + url)
+		req, _ := http.NewRequest("GET", url, nil)
+		response, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("response status code is", response.StatusCode)
+		body, _ := io.ReadAll(response.Body)
+		t.Log("response body is ", string(body))
+		if response.StatusCode != c.expCode {
+			t.Fatal("unexpected code :", response.StatusCode, "exp:", c.expCode)
+		}
+		if string(body) != c.exp {
+			t.Fatal("unepxected body:", string(body), "exp:", c.exp)
+		}
 	}
 }
