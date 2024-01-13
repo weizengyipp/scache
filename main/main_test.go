@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 var host = "127.0.0.1"
-var port = "8003"
+var port = "8002"
 var apiport = "9999"
 
 func TestScacheGet(t *testing.T) {
@@ -38,6 +39,34 @@ func TestScacheGet(t *testing.T) {
 			t.Fatal("unepxected body:", string(body), "exp:", c.exp)
 		}
 	}
+}
+
+func TestScacheConcurrentGet(t *testing.T) {
+	cases := []struct {
+		key, exp string
+		expCode  int
+	}{
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+		{"Tom", "630", 200},
+	}
+
+	for _, c := range cases {
+		url := "http://" + host + ":" + port + "/scache/scores/" + c.key
+		req, _ := http.NewRequest("GET", url, nil)
+		go http.DefaultClient.Do(req)
+	}
+	time.Sleep(3 * time.Second)
 }
 
 func TestScacheGetLoad(t *testing.T) {
