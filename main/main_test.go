@@ -4,8 +4,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
-	"time"
 )
 
 var host = "127.0.0.1"
@@ -61,12 +61,31 @@ func TestScacheConcurrentGet(t *testing.T) {
 		{"Tom", "630", 200},
 	}
 
+	numCase := len(cases)
+	var wg sync.WaitGroup
+	wg.Add(numCase)
+
 	for _, c := range cases {
 		url := "http://" + host + ":" + port + "/scache/scores/" + c.key
 		req, _ := http.NewRequest("GET", url, nil)
-		go http.DefaultClient.Do(req)
+		go func() {
+			defer wg.Done()
+			response, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log("response status code is", response.StatusCode)
+			body, _ := io.ReadAll(response.Body)
+			t.Log("response body is ", string(body))
+			if response.StatusCode != c.expCode {
+				t.Fatal("unexpected code :", response.StatusCode, "exp:", c.expCode)
+			}
+			if string(body) != c.exp {
+				t.Fatal("unepxected body:", string(body), "exp:", c.exp)
+			}
+		}()
 	}
-	time.Sleep(3 * time.Second)
+	wg.Wait()
 }
 
 func TestScacheGetLoad(t *testing.T) {
